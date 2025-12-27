@@ -1,0 +1,7 @@
+
+==================================================
+Ejecución: 2025-12-12 15:58:46
+Directorio: & "c:/Users/Director TI/AppData/Local/Programs/Python/Python313/python.exe" c:/xampp/htdocs/erase/erase.py
+==================================================
+No se pudo eliminar la carpeta raíz: [WinError 123] El nombre de archivo, el nombre de directorio o la sintaxis de la etiqueta del volumen no son correctos: '& "c:/Users/Director TI/AppData/Local/Programs/Python/Python313/python.exe" c:/xampp/htdocs/erase/erase.py'
+=== Proceso completo ===

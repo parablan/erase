@@ -1,0 +1,43 @@
+
+==================================================
+Ejecución: 2025-12-12 16:18:23
+Directorio: C:\xampp\htdocs\erase\Nueva carpeta
+==================================================
+Archivo: disco_prueba - copia - copia.png
+Hash inicial: 0080cffaa3a420184c4977e11585d2b94073ee4938fbdabf6882d09941905e5c
+Cifrado AES-GCM efímero iniciado.
+Cifrado AES-GCM efímero finalizado.
+Proceso DoD Short iniciado.
+Pasada 1/3 completada.
+Pasada 2/3 completada.
+Pasada 3/3 completada.
+Proceso DoD Short finalizado.
+Hash final: f19fa160066a403c4dcf4d5bd8e0624364871bd245c4edf377affaa17f4c9f66
+Archivo eliminado.
+
+Archivo: disco_prueba - copia.png
+Hash inicial: 0080cffaa3a420184c4977e11585d2b94073ee4938fbdabf6882d09941905e5c
+Cifrado AES-GCM efímero iniciado.
+Cifrado AES-GCM efímero finalizado.
+Proceso DoD Short iniciado.
+Pasada 1/3 completada.
+Pasada 2/3 completada.
+Pasada 3/3 completada.
+Proceso DoD Short finalizado.
+Hash final: 776f6bf342a4a4c1088cce9d2aa6280f04b9947e5086ffd5cf0e80ea709dfe9c
+Archivo eliminado.
+
+Archivo: disco_prueba.png
+Hash inicial: 0080cffaa3a420184c4977e11585d2b94073ee4938fbdabf6882d09941905e5c
+Cifrado AES-GCM efímero iniciado.
+Cifrado AES-GCM efímero finalizado.
+Proceso DoD Short iniciado.
+Pasada 1/3 completada.
+Pasada 2/3 completada.
+Pasada 3/3 completada.
+Proceso DoD Short finalizado.
+Hash final: 7298df2f1ab6fb2c1d42687bd67cf2c0a89804e8f0e535255c1e9ab52378bde3
+Archivo eliminado.
+
+Carpeta raíz 'C:\xampp\htdocs\erase\Nueva carpeta' eliminada.
+=== Proceso completo ===
