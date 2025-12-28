@@ -16,10 +16,8 @@ El sistema genera un log.txt con la informacion necesaria que soporte auditoria 
 
 Ejemplo:  
 
-==================================================
 Ejecución: 2025-12-26 23:41:43
 Directorio: C:\Users\alejo\Downloads\Nueva carpeta
-==================================================
 
 Posteriormente Erase eliminara todo el contenido del directorio y sub directorios, indicando nombre del archivo, hash inicial, proceso AES-GCM, proceso DoD Short, hash final y la eliminación del archivo.   
 
