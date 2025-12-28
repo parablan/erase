@@ -12,14 +12,14 @@ Borrado = Eliminación del archivo
 
 # Log
 
-El sistema genera un log.txt con la informacion necesaria que soporte auditoria y respalde el proceso, grabando la fecha y hora de ejecución, nombre del directorio a eliminar.  
+El sistema genera un log.txt con la información necesaria que soporte procesos de auditoría, grabando como encabezado la fecha y hora de ejecución, así como el nombre del directorio raíz indicado por el usuario.  
 
 Ejemplo:  
 
 Ejecución: 2025-12-26 23:41:43
 Directorio: C:\Users\alejo\Downloads\Nueva carpeta
 
-Posteriormente Erase eliminara todo el contenido del directorio y sub directorios, indicando nombre del archivo, hash inicial, proceso AES-GCM, proceso DoD Short, hash final y la eliminación del archivo.   
+Posteriormente se indica el contenido del directorio y sub directorios a eliminar, indicando nombre del archivo, hash inicial, proceso AES-GCM, proceso DoD Short, hash final y la eliminación del archivo.   
 
 Ejemplo  
 
