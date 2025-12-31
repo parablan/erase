@@ -71,6 +71,7 @@ def create_pdf_report(directory, disk_info):
         pdf.set_font("Arial", size=10)
         pdf.cell(200, 5, txt=f"Fecha y hora: {datetime.datetime.now()}", ln=True)
         pdf.cell(200, 5, txt=f"Unidad o directorio borrado: {directory}", ln=True)
+        pdf.cell(200, 5, txt=f"Versión de software: 1.0", ln=True)
         pdf.cell(200, 5, txt="Método híbrido: AES-GCM + DoD Short + Eliminación de archivos", ln=True)
         pdf.ln(2)
         
@@ -110,6 +111,7 @@ def encabezado_log(directorio):
         log.write(f"Powered by parablan \n\n")
         log.write(f"Ejecución: {ahora}\n")
         log.write(f"Unidad o directorio borrado: {directorio}\n")
+        log.write(f"Versión de software: 1.0 \n")
         log.write(f"Método híbrido: AES-GCM + DoD Short + Eliminación de archivos\n")
         log.write("="*50 + "\n")
 
@@ -246,6 +248,7 @@ if __name__ == "__main__":
 | (____/\ | ) \ \__ | )   ( | /\____) | | (____/\
 (_______/ |/   \__/ |/     \| \_______) (_______/
 
+Versión: 1.0 
 Powered by parablan
 Hector Alejandro Parada Blanco
 
