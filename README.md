@@ -10,4 +10,4 @@ Este proyecto está documentado en detalle en la [Wiki oficial](https://parablan
 
  [link archivo comprimido](https://parablan.com.co/erase/erase.7z)
  
- Hash  SHA256: BE6D084578524C60380AAA3E1040426AEAA83DCBA72FC6DCAC5F09242B450D96
+ Hash  SHA256: 81BA4A8B11E668D8D163201A184002485F5A1B35CE1F608B1B80EF1B8A585EFB
