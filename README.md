@@ -1,6 +1,6 @@
 # ERASE
 
-Software diseñado como apoyo en el proceso de sanitización de medios de almacenamiento.
+Herramienta diseñado como apoyo en el proceso de sanitización de medios de almacenamiento.
 
 # Web oficial
 
