@@ -1,3 +1,16 @@
+'''
+
+copyright © 2026 - parablan
+
+Desarrollador:  Hector Alejandro Parada Blanco
+                https://www.parablan.com.co/
+                Powered by parablan
+
+Descripción:
+Herramienta diseñada para borrar de forma segura directorios, unidades de disco duro y medios de almacenamiento fisicos.
+
+'''
+
 import os
 import ctypes
 import sys
@@ -14,7 +27,7 @@ from cryptography.hazmat.primitives import constant_time
 from cryptography.hazmat.backends import default_backend
 
 LOG_FILE = f"log{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
-CHUNK_SIZE = 1024 * 1024  # 1 MiB por chunk para no cargar archivos grandes en memoria
+CHUNK_SIZE = 1024 * 1024  # 1 MiB por bloque para no cargar archivos grandes en memoria
 
 def get_disk_info(target_path):
     info = {'Brand': 'Unknown', 'Model': 'Unknown', 'Serial': 'Unknown', 'Size': 'Unknown'}
@@ -31,17 +44,17 @@ def get_disk_info(target_path):
             info['Model'] = data.get('Model', 'Unknown')
             info['Serial'] = data.get('SerialNumber', 'Unknown')
             
-            # Brand logic
+            # Lógica de la marca
             manufacturer = data.get('Manufacturer')
             if manufacturer and manufacturer.strip() and manufacturer.lower() not in ['(standard disk drives)', 'unknown']:
                 info['Brand'] = manufacturer.strip()
             else:
-                # Try to guess from Model
+                # Intentar adivinar a partir del modelo
                 parts = info['Model'].split()
                 if parts:
                      info['Brand'] = parts[0]
             
-            # Size logic
+            # Lógica del tamaño
             size_bytes = data.get('Size')
             if size_bytes:
                 size_gb = float(size_bytes) / (1024**3)
@@ -66,7 +79,7 @@ def get_physical_disk_info(disk_number):
             manufacturer = data.get('Manufacturer')
             if manufacturer and manufacturer.strip() and manufacturer.lower() not in ['(standard disk drives)', 'unknown']:
                 info['Brand'] = manufacturer.strip()
-            # Size logic
+            # Lógica del tamaño
             size_bytes = data.get('Size')
             if size_bytes:
                 size_gb = float(size_bytes) / (1024**3)
@@ -109,6 +122,9 @@ def create_pdf_report(directory, disk_info, hashes=None):
         pdf.image("logo.png", x=16, y=17, w=40)
         pdf.ln(10)
         pdf.set_font("Arial", size=10)
+        pdf.cell(200, 10, txt="1.0", ln=True, align='L')
+        pdf.ln(10)
+        pdf.set_font("Arial", size=10)
         pdf.cell(200, 10, txt="Powered by parablan", ln=True, align='L')
 
         pdf.ln(5)
@@ -136,7 +152,7 @@ def create_pdf_report(directory, disk_info, hashes=None):
             pdf.set_font("Arial", "B", 10)
             pdf.cell(200, 5, txt="Verificación de Integridad (SHA-256)", ln=True)
             pdf.set_font("Arial", size=9)
-            pdf.cell(200, 5, txt=f"Hash Inicial: {hashes.get('initial')}", ln=True)
+            pdf.cell(200, 5, txt=f"Hash inicial: {hashes.get('initial')}", ln=True)
             pdf.cell(200, 5, txt=f"Hash Final:   {hashes.get('final')}", ln=True)
             pdf.ln(2)
         
@@ -164,6 +180,7 @@ def encabezado_log(directorio):
     with open(LOG_FILE, "a", encoding="utf-8") as log:
         log.write("\n" + "="*50 + "\n")
         log.write(f"ERASE \n")
+        log.write(f"1.0\n")
         log.write(f"Powered by parablan \n\n")
         log.write(f"Ejecución: {ahora}\n")
         log.write(f"Unidad o directorio borrado: {directorio}\n")
@@ -196,12 +213,12 @@ def escribir_patron(f, size, patron=None, bloque=4096):
     os.fsync(f.fileno())
 
 def cifrar_archivo_aes_gcm_inplace(path):
-    # Cifra el archivo en el sitio usando AES-GCM por chunks:
+    # Cifra el archivo en el sitio usando AES-GCM por bloques:
     key = os.urandom(32)       # AES-256
     nonce = os.urandom(12)     # Nonce GCM (12 bytes)
     backend = default_backend()
 
-    # Leer el archivo y cifrar por chunks escribiendo a un temporal
+    # Leer el archivo y cifrar por bloques escribiendo a un temporal
     temp_path = path + ".enc_tmp"
     encryptor = None
     
@@ -250,14 +267,14 @@ def wipe_physical_drive_aes_gcm(path, size, chunk_size=1024*1024):
     ROTATE_LIMIT = 1 * 1024 * 1024 * 1024 # 1 GB
     backend = default_backend()
     
-    # Importante: buffering=0 para evitar Errno 22 (Invalid argument) en discos físicos
+    # Importante: buffering=0 para evitar Errno 22 (Argumento inválido) en discos físicos
     with open(path, "rb+", buffering=0) as f:
         f.seek(0) # Asegurar inicio
         zeros = b'\x00' * chunk_size
         offset = 0
         bytes_processed_since_rotate = 0
 
-        # Inicializar primer encryptor
+        # Inicializar el primer encriptador
         key = os.urandom(32)
         nonce = os.urandom(12)
         encryptor = Cipher(algorithms.AES(key), modes.GCM(nonce), backend=backend).encryptor()
@@ -273,18 +290,18 @@ def wipe_physical_drive_aes_gcm(path, size, chunk_size=1024*1024):
             # Calcular cuánto falta
             remaining = size - offset
             if remaining < chunk_size:
-                # Último chunk más pequeño
+                # Último bloque más pequeño
                 chunk_data = b'\x00' * remaining
                 if bytes_processed_since_rotate == 0:
                      # Si acabamos de rotar, necesitamos una nueva instancia
-                     # (aunque en teoría el check de rotate ya lo hizo)
+                     # (aunque en teoría la verificación de rotación ya lo hizo)
                      pass
                 ct = encryptor.update(chunk_data)
                 f.write(ct)
                 offset += remaining
                 break
             
-            # Cifrar bloque de ceros -> Keystream
+            # Cifrar bloque de ceros -> Flujo de claves (Keystream)
             ct = encryptor.update(zeros)
             f.write(ct)
             offset += chunk_size
@@ -307,15 +324,15 @@ def wipe_critical_sectors(path, total_size):
             f.flush()
             os.fsync(f.fileno())
             
-            # Sobrescribir final (GPT backup)
+            # Sobrescribir final (Respaldo GPT)
             if total_size > sector_size:
-                escribir_log("Sobrescribiendo sectores críticos (final - GPT backup)...")
+                escribir_log("Sobrescribiendo sectores críticos (final - Respaldo GPT)...")
                 f.seek(total_size - sector_size)
                 f.write(os.urandom(sector_size))
                 f.flush()
                 os.fsync(f.fileno())
         
-        escribir_log("Sectores críticos sobrescritos exitosamente.")
+        escribir_log("Sectores críticos sobrescritos exitosamente")
     except Exception as e:
         escribir_log(f"Error sobrescribiendo sectores críticos: {e}")
 
@@ -363,7 +380,7 @@ def verify_disk_wiped(path, size):
         with open(path, "rb", buffering=0) as f:
             for i in range(samples):
                 try:
-                    # Calcular offset aleatorio pero alineado
+                    # Calcular desplazamiento (offset) aleatorio pero alineado
                     offset = (size // samples) * i
                     f.seek(offset)
                     data = f.read(min(sample_size, size - offset))
@@ -408,7 +425,7 @@ def verify_disk_wiped(path, size):
 def calculate_physical_drive_hash(path, size, algoritmo="sha256"):
     escribir_log(f"Calculando hash {algoritmo} (Tamaño: {size} bytes)...")
     c = hashlib.new(algoritmo)
-    chunk_size = 4 * 1024 * 1024 # 4MB buffer para velocidad
+    chunk_size = 4 * 1024 * 1024 # Búfer de 4MB para velocidad
     processed = 0
     last_log_time = time.time()
     
@@ -422,7 +439,7 @@ def calculate_physical_drive_hash(path, size, algoritmo="sha256"):
                 c.update(bloque)
                 processed += len(bloque)
                 
-                # Log progreso cada 5 segundos
+                # Registrar progreso cada 5 segundos
                 if time.time() - last_log_time > 5:
                     progreso = (processed / size) * 100
                     print(f"Hash progreso: {progreso:.1f}%", end='\r')
@@ -456,15 +473,15 @@ def wipe_physical_drive_dod_short(drive_number):
     escribir_log(f"Tamaño: {size} bytes")
 
     # Paso 0: Sobrescribir sectores críticos ANTES del proceso principal
-    escribir_log("Paso 0: Sobrescritura inicial de sectores críticos (MBR/GPT)...")
+    escribir_log("Sobrescritura inicial de sectores críticos")
     wipe_critical_sectors(path, size)
 
     # Paso 1: Hash Inicial
-    escribir_log("Calculando Hash Inicial...")
+    escribir_log("Calculando Hash Inicial")
     hashes['initial'] = calculate_physical_drive_hash(path, size)
-    escribir_log(f"Hash Inicial: {hashes['initial']}")
+    escribir_log(f"Hash inicial: {hashes['initial']}")
 
-    # Paso 2: AES-GCM In-place
+    # Paso 2: AES-GCM en el sitio (in-place)
     try:
         escribir_log("Paso 1/4: Cifrado AES-GCM (Destructivo)...")
         wipe_physical_drive_aes_gcm(path, size)
@@ -475,28 +492,31 @@ def wipe_physical_drive_dod_short(drive_number):
     # Paso 3: DoD
     patrones = [b"\x00", b"\xFF", None]
     
-    # Importante: buffering=0 para raw access
+    # Importante: buffering=0 para acceso directo a nivel disco (raw access)
     with open(path, "rb+", buffering=0) as f:
         for i, patron in enumerate(patrones, start=1):
-            pass_num = i + 1 # AES was 1
+            pass_num = i + 1 # AES fue el paso 1
             if patron is None:
                 escribir_log(f"Paso {pass_num}/4: Aleatorio...")
             else:
-                 escribir_log(f"Paso {pass_num}/4: Patrón {patron.hex()}...")
+                if patron.hex()=="00":
+                    escribir_log(f"Paso {pass_num}/4: Patrón 0...")
+                if patron.hex()=="ff":
+                    escribir_log(f"Paso {pass_num}/4: Patrón 1...")
             
             escribir_patron(f, size, patron, bloque=1024*1024)
     
     # Paso 4: Sobrescribir sectores críticos NUEVAMENTE
-    escribir_log("Paso Final Extra: Sobrescritura final de sectores críticos...")
+    escribir_log("Sobrescritura final de sectores críticos")
     wipe_critical_sectors(path, size)
 
     # Paso 5: Hash Final
-    escribir_log("Calculando Hash Final...")
+    escribir_log("Calculando Hash Final")
     hashes['final'] = calculate_physical_drive_hash(path, size)
     escribir_log(f"Hash Final: {hashes['final']}")
 
     # Paso 6: Limpieza final de tabla de particiones
-    escribir_log("Limpieza final de tabla de particiones...")
+    escribir_log("Limpieza tabla de particiones")
     prepare_drive_diskpart(drive_number)
 
     escribir_log("=== Proceso de disco completo ===")
@@ -589,6 +609,7 @@ if __name__ == "__main__":
 | (____/\ | ) \ \__ | )   ( | /\____) | | (____/\
 (_______/ |/   \__/ |/     \| \_______) (_______/
 
+1.0
 Powered by parablan
 Hector Alejandro Parada Blanco
 
