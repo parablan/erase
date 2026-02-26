@@ -1,4 +1,4 @@
-# ERASE
+# Erase
 
 Tool designed to support the process of storage media sanitization.
 
