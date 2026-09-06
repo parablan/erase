@@ -1,3 +1,12 @@
+"""
+
+Erase v1.0
+Hector Alejandro Parada Blanco
+Powered by parablan
+2026
+
+"""
+
 import os
 import sys
 import stat
