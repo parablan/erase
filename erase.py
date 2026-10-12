@@ -304,7 +304,7 @@ def es_ruta_critica(path):
         p_norm = p_real.rstrip('/')
         if not p_norm or p_norm == '/':
             return True, "Directorio raíz del sistema (/)"
-        rutas_bloqueadas = ['/bin', '/boot', '/dev', '/etc', '/lib', '/lib32', '/lib64', '/proc', '/root', '/run', '/sbin', '/sys', '/usr', '/var']
+        rutas_bloqueadas = ['/bin', '/boot', '/dev', '/etc', '/lib', '/lib32', '/lib64', '/proc', '/root', '/sbin', '/sys', '/usr', '/var']
         for bloqueada in rutas_bloqueadas:
             if p_norm == bloqueada or p_norm.startswith(bloqueada + '/'):
                 return True, f"Directorio protegido del sistema ({bloqueada})"
@@ -475,7 +475,7 @@ def encabezado_log(directorio):
         log.write("\n" + "="*50 + "\n")
         log.write("ERASE \n")
         log.write("Powered by parablan \n\n")
-        log.write(f"Ejecución: {ahora}\n")
+        log.write(f"Fecha y Hora: {ahora}\n")
         log.write(f"Sistema operativo donde se realizó el borrado: {plataforma}\n")
         log.write(f"Unidad o directorio borrado: {directorio}\n")
         log.write("Método híbrido: AES-GCM + DoD Short + Borrado de archivos\n")
@@ -725,19 +725,26 @@ def verify_disk_wiped(path, size):
     escribir_log("Verificando borrado completo del disco...")
     sample_size = 1024 * 1024  # 1MB por muestra
     samples = 10
-    warnings = 0
+    # Los dispositivos físicos (\\.\PhysicalDriveN en Windows) exigen offsets alineados al sector;
+    # un offset desalineado provoca [Errno 22] Invalid argument. 4096 cubre sectores de 512 y 4K.
+    alineacion = 4096
+    sospechosos = 0
     successful_reads = 0
+    failed_reads = 0
     
     try:
         with open(path, "rb", buffering=0) as f:
             for i in range(samples):
+                # Offset distribuido a lo largo del disco y alineado al límite de sector
+                offset = (size // samples) * i
+                offset -= offset % alineacion
                 try:
-                    # Calcular offset aleatorio pero alineado
-                    offset = (size // samples) * i
                     f.seek(offset)
                     data = f.read(min(sample_size, size - offset))
                     
                     if not data:
+                        failed_reads += 1
+                        escribir_log(f"Advertencia: Lectura vacía en offset {offset}")
                         continue
                     
                     successful_reads += 1
@@ -745,27 +752,29 @@ def verify_disk_wiped(path, size):
                     # Verificar que no sea todo ceros o todo unos (patrones sospechosos)
                     if data == b'\x00' * len(data):
                         escribir_log(f"ADVERTENCIA: Patrón de ceros detectado en offset {offset}")
-                        warnings += 1
+                        sospechosos += 1
                     elif data == b'\xFF' * len(data):
                         escribir_log(f"ADVERTENCIA: Patrón de unos detectado en offset {offset}")
-                        warnings += 1
+                        sospechosos += 1
                 except Exception as read_error:
-                    # Error leyendo este sector específico, continuar con el siguiente
+                    failed_reads += 1
                     escribir_log(f"Advertencia: No se pudo leer sector en offset {offset}: {read_error}")
                     continue
         
         if successful_reads == 0:
-            escribir_log("Advertencia: No se pudieron leer sectores para verificación (esto es normal después de borrado completo)")
-            return True  # Consideramos exitoso si no se puede leer nada
-        elif warnings == 0:
-            escribir_log(f"Verificación completada: {successful_reads}/{samples} sectores leídos, sin patrones sospechosos")
-            return True
-        else:
-            escribir_log(f"Verificación completada con {warnings} advertencias en {successful_reads} lecturas")
+            escribir_log("ERROR: No se pudo leer ningún sector; la verificación no pudo realizarse.")
             return False
+        if failed_reads > 0:
+            escribir_log(f"Verificación INCOMPLETA: {successful_reads}/{samples} sectores leídos, {failed_reads} lecturas fallidas.")
+            return False
+        if sospechosos > 0:
+            escribir_log(f"Verificación completada con {sospechosos} patrones sospechosos en {successful_reads} lecturas")
+            return False
+        escribir_log(f"Verificación completada: {successful_reads}/{samples} sectores leídos, sin patrones sospechosos")
+        return True
     except Exception as e:
-        escribir_log(f"Advertencia durante verificación: {e} (esto puede ser normal después de borrado completo)")
-        return True  # No consideramos esto un error fatal
+        escribir_log(f"ERROR durante verificación: {e}")
+        return False
 
 def calculate_critical_sectors_hash(path, size, algoritmo="sha256"):
     """
@@ -960,7 +969,7 @@ def wipe_physical_drive_dod_short(drive_info):
     # Verificación de ausencia de patrones en disco (Solo lectura)
     verif_ok = verify_disk_wiped(path, size)
     if not verif_ok:
-        errores.append("Verificación posterior detectó posibles patrones remanentes")
+        errores.append("Verificación posterior fallida o incompleta (ver log para detalles)")
 
     escribir_log("=== Proceso de disco completo ===")
     
@@ -1038,7 +1047,7 @@ def wipe_directory(directorio):
     try:
         asegurar_escritura(directorio)
         os.rmdir(directorio)
-        escribir_log(f"Carpeta raíz '{directorio}' eliminada.")
+        escribir_log(f"Carpeta raíz eliminada: {directorio}")
     except Exception as e:
         msg = f"No se pudo eliminar la carpeta raíz '{directorio}': {e}"
         escribir_log(msg)
@@ -1062,6 +1071,7 @@ if __name__ == "__main__":
 | (____/\ | ) \ \__ | )   ( | /\____) | | (____/\
 (_______/ |/   \__/ |/     \| \_______) (_______/
 
+Version: 1.0.1
 Powered by parablan
 Hector Alejandro Parada Blanco
 
